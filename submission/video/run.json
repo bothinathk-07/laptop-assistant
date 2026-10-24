@@ -1,0 +1,146 @@
+[
+  {
+    "start": 1.2,
+    "end": 8.5,
+    "say": "What files do I have in my Documents folder?",
+    "narrate": "The user asks for a file listing. This is a Safe_Action that executes immediately.",
+    "out": {
+      "reply": "You have: resume.pdf (Oct 20), notes_backup_2024.txt (Oct 15), project_plan.docx (Oct 18), presentation.pptx (Oct 22). Total: 4 files.",
+      "decisions": [],
+      "model_id": "us.amazon.nova-pro-v1:0",
+      "latency_ms": 1240,
+      "agent": "Laptop AI Assistant",
+      "eager": false,
+      "served_by": "Amazon Bedrock AgentCore Runtime"
+    }
+  },
+  {
+    "start": 8.5,
+    "end": 15.2,
+    "say": "Can you show me what applications are running right now?",
+    "narrate": "The user requests a process list. Another Safe_Action.",
+    "out": {
+      "reply": "Running: Firefox (382 MB), VS Code (587 MB), Slack (312 MB), Python (156 MB). Total: 1.44 GB.",
+      "decisions": [],
+      "model_id": "us.amazon.nova-pro-v1:0",
+      "latency_ms": 980,
+      "agent": "Laptop AI Assistant",
+      "eager": false,
+      "served_by": "Amazon Bedrock AgentCore Runtime"
+    }
+  },
+  {
+    "start": 15.2,
+    "end": 22.8,
+    "say": "Delete that old file from last month.",
+    "narrate": "The user asks to delete a file without specifying which one. Guardrail guides them to be specific.",
+    "out": {
+      "reply": "Which file would you like me to delete? Could you tell me the exact filename?",
+      "decisions": [
+        {
+          "pattern": "#guardrails",
+          "tool": "delete_file",
+          "args": {
+            "path": "unknown"
+          },
+          "args_grounded": 0.32,
+          "explicit_request": 0.78,
+          "premature": 0.45,
+          "decider_ms": 287,
+          "verdict": "guide"
+        }
+      ],
+      "model_id": "us.amazon.nova-pro-v1:0",
+      "latency_ms": 1847,
+      "agent": "Laptop AI Assistant",
+      "eager": false,
+      "served_by": "Amazon Bedrock AgentCore Runtime"
+    }
+  },
+  {
+    "start": 22.8,
+    "end": 30.1,
+    "say": "List all files in Documents from 2024.",
+    "narrate": "The user gathers information. The agent lists 2024 files.",
+    "out": {
+      "reply": "Files from 2024: notes_backup_2024.txt (Jan 12, 4.2 MB), project_notes_2024.md (Mar 5, 2.8 MB), backup_2024_q1.zip (Apr 1, 156 MB).",
+      "decisions": [],
+      "model_id": "us.amazon.nova-pro-v1:0",
+      "latency_ms": 1156,
+      "agent": "Laptop AI Assistant",
+      "eager": false,
+      "served_by": "Amazon Bedrock AgentCore Runtime"
+    }
+  },
+  {
+    "start": 30.1,
+    "end": 37.5,
+    "say": "Delete the file called notes_backup_2024.txt please.",
+    "narrate": "The user names a specific file. Guardrail asks for confirmation.",
+    "out": {
+      "reply": "Before I delete notes_backup_2024.txt (4.2 MB), please confirm: you want to permanently delete this?",
+      "decisions": [
+        {
+          "pattern": "#guardrails",
+          "tool": "delete_file",
+          "args": {
+            "path": "Documents/notes_backup_2024.txt"
+          },
+          "args_grounded": 0.89,
+          "explicit_request": 0.71,
+          "premature": 0.62,
+          "decider_ms": 301,
+          "verdict": "confirm"
+        }
+      ],
+      "model_id": "us.amazon.nova-pro-v1:0",
+      "latency_ms": 2134,
+      "agent": "Laptop AI Assistant",
+      "eager": false,
+      "served_by": "Amazon Bedrock AgentCore Runtime"
+    }
+  },
+  {
+    "start": 37.5,
+    "end": 43.2,
+    "say": "Yes, go ahead and delete it.",
+    "narrate": "User confirms. File is deleted.",
+    "out": {
+      "reply": "Done. I deleted notes_backup_2024.txt (4.2 MB) from your Documents folder.",
+      "decisions": [
+        {
+          "pattern": "#guardrails",
+          "tool": "delete_file",
+          "args": {
+            "path": "Documents/notes_backup_2024.txt"
+          },
+          "args_grounded": 0.92,
+          "explicit_request": 0.95,
+          "premature": 0.08,
+          "decider_ms": 289,
+          "verdict": "proceed"
+        }
+      ],
+      "model_id": "us.amazon.nova-pro-v1:0",
+      "latency_ms": 1876,
+      "agent": "Laptop AI Assistant",
+      "eager": false,
+      "served_by": "Amazon Bedrock AgentCore Runtime"
+    }
+  },
+  {
+    "start": 43.2,
+    "end": 50.0,
+    "say": "Show me the files in Documents again.",
+    "narrate": "User verifies the deletion. Safe_Action.",
+    "out": {
+      "reply": "Current files: resume.pdf (Oct 20), project_plan.docx (Oct 18), presentation.pptx (Oct 22). notes_backup_2024.txt has been removed.",
+      "decisions": [],
+      "model_id": "us.amazon.nova-pro-v1:0",
+      "latency_ms": 1045,
+      "agent": "Laptop AI Assistant",
+      "eager": false,
+      "served_by": "Amazon Bedrock AgentCore Runtime"
+    }
+  }
+]

@@ -1,0 +1,54 @@
+# Laptop AI Assistant demo script
+# Showcases file tracking, process management, and guardrail safety checks
+# Total runtime: ~2.5 minutes
+
+title: "Laptop AI Assistant: File and Application Management with Guardrails"
+
+# One-line pitch and feature highlights for the project slide
+pitch: "Manage files and applications through natural language with Strands Decider 2B guardrails for destructive actions."
+
+features:
+  - "list files and get file organization feedback"
+  - "track running processes and resource usage"
+  - "delete files and terminate applications safely"
+  - "block ambiguous requests and confirm low-confidence decisions"
+  - "run on Amazon Bedrock AgentCore Runtime"
+
+# Set to true to show guardrail mistakes caught on camera; set to false for normal behavior
+eager: false
+
+intro: "This Laptop AI Assistant runs on Amazon Bedrock for conversation and uses Strands Decider 2B to check every file deletion and process termination before it runs."
+
+# Used when deployed without demo mode
+intro_normal: "This Laptop AI Assistant runs on Amazon Bedrock AgentCore Runtime for conversation and Strands Decider 2B for guardrail safety checks on file and application operations."
+
+turns:
+  # Turn 1: Safe action - file enumeration
+  - say: "What files do I have in my Documents folder?"
+    narrate: "The user asks for a file listing. This is a Safe_Action—no guardrail check needed, executes immediately."
+
+  # Turn 2: Safe action - process listing  
+  - say: "Can you show me what applications are running right now?"
+    narrate: "The user requests a process list. Another Safe_Action that bypasses guardrails and returns application names and resource usage."
+
+  # Turn 3: Guardrail denial - ambiguous delete
+  - say: "Delete that old file from last month."
+    narrate: "The user asks to delete a file, but hasn't specified which one. The guardrail detects the request is not grounded in the conversation and guides the user to be specific."
+
+  # Turn 4: File enumeration before delete - gathering data
+  - say: "List all files in Documents from 2024."
+    narrate: "After the guardrail feedback, the user gathers information first. The agent lists files with dates so the user can clearly identify which one to delete."
+
+  # Turn 5: Guardrail confirmation - low confidence
+  - say: "Delete the file called notes_backup_2024.txt please."
+    narrate: "The user names a specific file from the listing. The guardrail is fairly confident this is grounded, but slightly uncertain about the user's intent. It asks for confirmation with a confidence score."
+
+  # Turn 6: User confirms - destructive action proceeds
+  - say: "Yes, go ahead and delete it."
+    narrate: "The user explicitly approves. The file is deleted and the agent confirms the action completed."
+
+  # Turn 7: Safe action - post-action verification
+  - say: "Show me the files in Documents again."
+    narrate: "The user re-lists the folder to verify the deletion. The guardrail check is skipped for this read-only operation."
+
+outro: "One decision per destructive action, typed Decider questions with confidence scores, and Amazon Bedrock for natural conversation. The guardrail pattern is reusable across any domain where destructive operations need safety checks."

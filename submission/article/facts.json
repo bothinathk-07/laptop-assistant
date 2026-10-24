@@ -1,0 +1,99 @@
+{
+ "pattern_tag": "#guardrails",
+ "agentcore_features": [],
+ "pattern_doc": "REUSABLE DECISION PATTERN: file and app operation guardrail  (#guardrails)\n\nWhat it does\n    Before the laptop assistant runs a tool that modifies files or applications (delete, move,\n    terminate, launch), Strands Decider 2B checks the call against the conversation:\n    - are the arguments grounded in what the user said or in earlier tool results (no invented\n      file paths or process IDs)?\n    - does the user clearly ask for this action now, rather than asking about it?\n    - is it premature (should the assistant confirm first)?\n    Grounded and requested calls run; otherwise the agent is sent back to ask (`Guide`), or a\n    human confirms (`Confirm`) when the decider is unsure.\n\nTyped questions and options\n    args_grounded (noul), explicit_request (noul), premature (noul); see QUESTIONS below.\n\nWiring\n    `FileAppGuard` is a Strands `InterventionHandler`; agent/agent.py passes it to the Agent:\n        Agent(..., interventions=[FileAppGuard(decider)])\n    It only inspects tools in DESTRUCTIVE_TOOLS; read-only tools run untouched. If the agent\n    retries a call that was just sent back, unchanged, the retry is denied (Strands requires\n    guide handlers to converge).\n\nHow to reuse it\n    Copy this file, change DESTRUCTIVE_TOOLS to your irreversible operations, and reword the\n    three questions for your domain. The pattern is domain-agnostic: it accepts arbitrary\n    conversation state and proposed actions without coupling to specific tool implementations.\n    Thresholds and decision logic are in `before_tool_call`. This same pattern works for\n    databases, cloud resources, or any domain where operations need grounding checks.\n\nBuilt with the AWS User Group Madurai Strands Decider hackathon kit",
+ "questions_code": "QUESTIONS = {\n    \"args_grounded\": Decider.noul(\n        \"Are all arguments in the proposed action stated by the user or returned by an earlier operation?\",\n        {\"true\": \"every argument comes from the user's words or a prior tool result\",\n         \"false\": \"an argument was guessed or invented\"}),\n    \"explicit_request\": Decider.noul(\n        \"Is the user's latest message an instruction to perform this action now, rather than a question about it?\",\n        {\"true\": \"an instruction such as 'delete file.txt' or 'kill that process'\",\n         \"false\": \"a question ('can I...?', 'what happens if...?'), a complaint, or exploration\"}),\n    \"premature\": Decider.noul(\n        \"Should the assistant confirm details with the user before taking this action?\",\n        {\"true\": \"something is ambiguous or unconfirmed; ask first\",\n         \"false\": \"everything needed is confirmed\"}),\n}",
+ "agent_md": "# Use case\n\n- **Pitch:** a laptop AI assistant that helps users manage files and applications through natural language conversation, with safety guardrails that prevent accidental destructive actions.\n- **Who it is for:** laptop owners who want to manage their files, track application usage, and control running processes without remembering complex commands or accidentally damaging their system.\n- **Features:**\n  - file tracking and organization feedback through natural language conversation;\n  - application management with process monitoring and control;\n  - every destructive action (file deletion, file moves, process termination) is checked before it runs, and low-confidence cases require human confirmation;\n  - fast read-only operations (file enumeration, process listing) execute without guardrail overhead;\n  - deployed on Amazon Bedrock AgentCore Runtime.\n- **The decision handed to Strands Decider 2B:** before a destructive file or application operation, is it grounded in the conversation (no guessed paths/PIDs) and explicitly requested by the user (not just a question)? (`#guardrails`)\n- **Why a decision model:** the guardrail check runs on every destructive action, so it must be fast, cheap and private, and it must return calibrated confidence scores the code can branch on.\n- **Amazon Bedrock:** the conversation and tool use (Amazon Nova Pro by default).\n",
+ "llm_provider_local_runs": "ugmdu",
+ "agent_name": "laptop-assistant",
+ "bench": {
+  "summary": {
+   "decider": {
+    "accuracy": 0.7917,
+    "decisions": 24,
+    "per_question": {
+     "args_grounded": 0.9167,
+     "explicit_request": 0.6667
+    },
+    "latency_p50_ms": 294.8,
+    "latency_p95_ms": 467.6,
+    "usd_per_1k_decisions": 0.0,
+    "confident_share": 0.6667,
+    "accuracy_when_confident": 0.9375,
+    "sent_to_human_at_threshold": 8
+   },
+   "llm": {
+    "accuracy": 0.9583,
+    "decisions": 24,
+    "per_question": {
+     "args_grounded": 0.9167,
+     "explicit_request": 1.0
+    },
+    "latency_p50_ms": 1276.5,
+    "latency_p95_ms": 1426.1,
+    "usd_per_1k_decisions": 0.1785,
+    "confident_share": 1.0,
+    "accuracy_when_confident": 0.9583,
+    "sent_to_human_at_threshold": 0
+   },
+   "speedup_p50": 4.33
+  },
+  "decider_model": null,
+  "decider_mode": "local",
+  "llm_model": "us.amazon.nova-pro-v1:0",
+  "cases": 12,
+  "split": "all",
+  "threshold": 0.7
+ },
+ "bench_table": "| | Strands Decider 2B | us.amazon.nova-pro-v1:0 |\n|---|---|---|\n| Accuracy | 79.2% | 95.8% |\n| Latency p50 per decision | 295 ms | 1276 ms |\n| Latency p95 | 468 ms | 1426 ms |\n| Cost per 1,000 decisions | $0.0000 | $0.1785 |\n| Answered alone at confidence >= 0.7 | 67% | 100% |\n| Accuracy when confident | 93.8% | 95.8% |\n\nAt the median the decider was 4.3x faster than the LLM.\n",
+ "demo_turns": [
+  {
+   "user": "My headphones are broken, I want my money back.",
+   "reply": "Please provide the order ID for the headphones so I can process your refund.",
+   "decisions": [
+    {
+     "pattern": "#guardrails",
+     "tool": "refund_order",
+     "args": {
+      "amount": 249.0,
+      "order_id": "A1002"
+     },
+     "args_grounded": 0.437,
+     "explicit_request": 0.791,
+     "premature": 0.235,
+     "decider_ms": 3075,
+     "verdict": "guide"
+    }
+   ],
+   "latency_ms": 6970
+  },
+  {
+   "user": "It's order A1002, refund the full amount please.",
+   "reply": "Your refund for order A1002 has been processed. You will receive 249.0 back to your original payment method. If you have any further questions, feel free to ask.",
+   "decisions": [
+    {
+     "pattern": "#guardrails",
+     "tool": "refund_order",
+     "args": {
+      "amount": 249,
+      "order_id": "A1002"
+     },
+     "args_grounded": 0.608,
+     "explicit_request": 0.894,
+     "premature": 0.128,
+     "decider_ms": 3894,
+     "verdict": "proceed"
+    }
+   ],
+   "latency_ms": 5813
+  },
+  {
+   "user": "Is it possible to cancel an order after it ships?",
+   "reply": "Once an order has shipped, it cannot be cancelled. However, you can still request a refund after receiving the item. If you have any further questions, feel free to ask.",
+   "decisions": [],
+   "latency_ms": 940
+  }
+ ],
+ "repo_url": "",
+ "video_url": ""
+}
